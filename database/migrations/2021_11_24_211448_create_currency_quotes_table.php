@@ -14,8 +14,8 @@ class CreateCurrencyQuotesTable extends Migration
     public function up()
     {
         Schema::create('currency_quotes', function (Blueprint $table) {
-            $table->id();
-            $table->integer('cur_id')->default(0);
+            $table->increments('id');
+            $table->unsignedInteger('cur_id')->default(0);
             $table->float('bid')->default(0);
             $table->float('ask')->default(0);
             $table->foreign('cur_id')->references('id')->on('currencies');
