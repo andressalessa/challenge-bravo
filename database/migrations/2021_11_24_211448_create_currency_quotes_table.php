@@ -14,11 +14,14 @@ class CreateCurrencyQuotesTable extends Migration
     public function up()
     {
         Schema::create('currency_quotes', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('cur_id')->default(0);
+            $table->id();
+            $table->unsignedBigInteger('id_from')->default(0);
+            $table->unsignedBigInteger('id_to')->default(0);
             $table->float('bid')->default(0);
             $table->float('ask')->default(0);
-            $table->foreign('cur_id')->references('id')->on('currencies');
+            $table->foreign('id_from')->references('id')->on('currencies');
+            $table->foreign('id_to')->references('id')->on('currencies');
+            $table->index(['id_from', 'id_to']);
             $table->timestamps();
         });
     }
