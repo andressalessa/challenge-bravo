@@ -1,0 +1,9 @@
+<?php
+
+return [
+    ['code' => 'USD'],
+    ['code' => 'BRL'],
+    ['code' => 'EUR'],
+    ['code' => 'BTC'],
+    ['code' => 'ETH'],
+];
