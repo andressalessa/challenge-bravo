@@ -33,14 +33,17 @@ class CurrencyQuotesController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'code' => 'required',
-            'codein' => 'required',
-            'bid' => 'required',
-            'ask' => 'required',
-        ]);
+        /**
+         * Todo verify how to fix this validation
+         */
+        // $request->validate([
+        //     'id_from' => 'required',
+        //     'id_to' => 'required',
+        //     'bid' => 'required',
+        //     'ask' => 'required',
+        // ]);
 
-        dd($request->all());
+        
 
         $currency = CurrencyQuotes::create($request->all());
         return json_response($currency, 201);
@@ -101,15 +104,28 @@ class CurrencyQuotesController extends Controller
         return json_response("", 204);
     }
 
-    public function getCurrencyQuote($currency) {
-        preg_match_all('/[A-Z]+/', $currency, $currencies);
+    /**
+     * Get information of desired currency quote
+     * 
+     * @param string $from 
+     * @param string $to 
+     * @return array
+     */
 
-        $code = $currencies[0];
-        $codein = $currencies[1];
+    public function getCurrencyQuote(string $from, string $to) {
+        $currency_quote = [];
+        $collection = CurrencyQuotes::from('currency_quotes as q')
+                                            ->join('currencies as cfrom', CurrencyQuotes::raw('q.id_from'), '=', CurrencyQuotes::raw('cfrom.id'))
+                                            ->join('currencies as cto', CurrencyQuotes::raw('q.id_to'), '=', CurrencyQuotes::raw('cto.id'))
+                                            ->select(CurrencyQuotes::raw('cfrom.id as id_from'), CurrencyQuotes::raw('cto.id as id_to'), CurrencyQuotes::raw('q.bid'), CurrencyQuotes::raw('q.ask'), CurrencyQuotes::raw('cfrom.code as code_from'), CurrencyQuotes::raw('cto.code as code_to'))
+                                            ->where(CurrencyQuotes::raw('cfrom.code'), $from)
+                                            ->where(CurrencyQuotes::raw('cto.code'), $to)
+                                            ->get();
+        $collection->each(function ($collection) use (&$currency_quote)
+        {
+            $currency_quote = $collection->toArray();
+        });
 
-        CurrencyQuotes::where('code', $code)
-                        ->where('codein', $codein)
-                        ->get();
-
+        return $currency_quote;
     }
 }

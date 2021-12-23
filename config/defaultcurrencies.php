@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Based on challenge bravo description
+ */
+
 return [
     ['code' => 'USD'],
     ['code' => 'BRL'],

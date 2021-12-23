@@ -1,7 +1,9 @@
 <?php
 
-use App\Models\CurrencyQuotes;
-use Illuminate\Http\Request;
+namespace App\Classes;
+
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Support\Facades\Log;
 
 class CurrencyQuoteRate {
 
@@ -13,48 +15,97 @@ class CurrencyQuoteRate {
 
     /**
      * 
-     * @var string
+     * @var int
      */
-    protected static $code;
+    protected static $id_from;
 
     /**
      * 
-     * @var string
+     * @var int
      */
-    protected static $codein;
+    protected static $id_to;
 
     /**
-     * "code" => $currency['code'],
-        "codein" => $currency['codein'],
-        "bid" => $currency['bid'],
-        "ask" => $currency['ask']
+     * 
+     * @var double
      */
+    protected static $bid;
 
     /**
-     * Rate the Currency Quotes that does not exist yet on the external API
-     * @param string $currency 
-     * @return Request $request
+     * 
+     * @var double
+     */
+
+    protected static $ask;
+    /**
+     * 
+     * @var double
+     */
+    protected static $aux_bid;
+
+    /**
+     * 
+     * @var double
+     */
+    protected static $aux_ask;
+
+    /**
+     * Calculate the Rate Currency Quotes that does not exist yet on the external API
+     * @param mixed $currency 
+     * @return array|false 
+     * @throws BindingResolutionException 
      */
     public static function rate($currency)
     {
         static::$currency = $currency;
-
-        return [];
+        if (static::getReverseCurrencyQuote()) {
+            static::calculateBuyQuote();
+            static::calculateSellQuote();
+            return static::fillDataToSave();
+        }
+        return false;
     }
 
-    protected static function getExistentReverseCurrencyQuote() 
-    {
+    /**
+     * Get reverse currency quote to make the calculation of the new currency quote
+     * @return bool 
+     * @throws BindingResolutionException 
+     */
+    protected static function getReverseCurrencyQuote() {
         preg_match_all('/[A-Z]+/', static::$currency, $currencies);
+        $currency_quotes = app('\App\Http\Controllers\api\CurrencyQuotesController')->getCurrencyQuote($currencies[0][1], $currencies[0][0]);
 
-        $currency_quotes = new CurrencyQuotes();
-        $existent_quote = $currency_quotes
-                            ->select('code', 'codein', 'bid', 'ask')
-                            ->where('code', $currencies[1])
-                            ->where('codein', $currencies[0])->get();
-
-        dd($existent_quote);
-
+        if (count($currency_quotes)) {
+            static::$id_from = $currency_quotes['id_to'];
+            static::$id_to = $currency_quotes['id_from'];
+            static::$aux_bid = $currency_quotes['bid'];
+            static::$aux_ask = $currency_quotes['ask'];
+            return true;
+        }
+        return false;
     }
 
-    // protected static function 
+    protected static function calculateBuyQuote() {
+        static::$bid = 1/static::$aux_bid;
+        static::$bid = sprintf("%f", static::$bid);
+    }
+
+    protected static function calculateSellQuote() {
+        static::$ask = 1/static::$aux_ask;
+        static::$ask = sprintf("%f", static::$ask);
+    }
+
+    /**
+     * Return data to save on the database
+     * @return array
+     */
+    protected static function fillDataToSave() {
+        return [
+            "id_from" => static::$id_from,
+            "id_to" => static::$id_to,
+            "bid" => static::$bid,
+            "ask" => static::$ask
+        ];
+    }
+
 }

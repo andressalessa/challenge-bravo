@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 
 class CurrenciesController extends Controller
 {
+    protected static $keys;
+    
     /**
      * Display a listing of the resource.
      *
@@ -118,5 +120,25 @@ class CurrenciesController extends Controller
         }
 
         return $all_combination;
+    }
+
+    /**
+     * Get the primary key for the currencies selected
+     * @param array $codes 
+     * @return array 
+     */
+    public static function getCurrenciesPrimaryKey(array $codes) {
+        $collection = Currencies::select('id', 'code')
+                                    ->where('code', $codes[0])
+                                    ->orWhere('code', $codes[1])
+                                    ->get();
+
+        $collection->each(function ($collection) 
+        {
+            $currency = $collection->toArray();
+            static::$keys[$currency['code']] = $currency['id'];
+        });
+
+        return static::$keys;
     }
 }

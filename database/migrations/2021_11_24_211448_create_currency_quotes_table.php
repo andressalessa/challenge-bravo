@@ -17,11 +17,11 @@ class CreateCurrencyQuotesTable extends Migration
             $table->id();
             $table->unsignedBigInteger('id_from')->default(0);
             $table->unsignedBigInteger('id_to')->default(0);
-            $table->float('bid')->default(0);
-            $table->float('ask')->default(0);
+            $table->double('bid', 12, 6)->default(0);
+            $table->double('ask', 12, 6)->default(0);
             $table->foreign('id_from')->references('id')->on('currencies');
             $table->foreign('id_to')->references('id')->on('currencies');
-            $table->index(['id_from', 'id_to']);
+            $table->index(['id_from', 'id_to'])->unique();
             $table->timestamps();
         });
     }
